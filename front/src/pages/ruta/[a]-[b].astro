@@ -1,0 +1,89 @@
+---
+// front/src/pages/ruta/[a]-[b].astro
+
+// FORZAR SSR (Renderizado en el Servidor)
+export const prerender = false; 
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { decode } from 'html-entities'; // Usamos una utilidad para decodificar caracteres especiales como \u00f3
+
+// 1. Obtener la URL de la API desde las variables de entorno de Astro
+const PHP_API_URL = import.meta.env.PUBLIC_PHP_API_URL; 
+
+// 2. Obtener los parámetros de la URL de Astro
+const { a, b } = Astro.params;
+
+// 3. Des-slugify para pasar a la API (reemplazamos '-' por espacio)
+const puntoA = a.replace(/-/g, ' '); 
+const puntoB = b.replace(/-/g, ' ');
+
+// 4. Fetch al Controlador PHP (Lado del servidor de Astro/SSR)
+let data: any = { error: 'Error de conexión o cálculo.' }; 
+let httpError = false;
+
+try {
+    const response = await fetch(`${PHP_API_URL}?a=${puntoA}&b=${puntoB}`);
+    
+    if (!response.ok) {
+        httpError = true;
+        // Intentar leer el error JSON si el backend lo envía
+        const errorData = await response.json().catch(() => ({error: 'Error HTTP. Servidor PHP no disponible o error interno.'}));
+        data = { error: errorData.error || `Error HTTP ${response.status}.` };
+    } else {
+        data = await response.json();
+    }
+} catch (e) {
+    httpError = true;
+    console.error("Fallo la conexión a PHP:", e);
+    data = { error: 'Fallo al conectar con el servidor PHP. ¿Está activo en localhost:8080?' };
+}
+
+// 5. Preparar metadatos dinámicos para el SEO
+const pageTitle = data.error 
+    ? "Error en la Ruta" 
+    : `Ruta de ${decode(data.distancia)} | ${puntoA} a ${puntoB}`;
+---
+
+<BaseLayout title={pageTitle} description={data.transporte ? `El medio sugerido es: ${data.transporte}` : pageTitle} image={data.fotoA}>
+    <main>
+        {/* 6. Renderizado del Contenido (HTML-First) */}
+        <section class="row">
+            <div class="column column-80 column-offset-10">
+                {data.error || httpError ? (
+                    <>
+                        <h1 style="color: red;">🚨 Error al Calcular la Ruta</h1>
+                        <p>{decode(data.error)}</p>
+                    </>
+                ) : (
+                    <>
+                        <h1>✅ Ruta de {puntoA} a {puntoB}</h1>
+                        <hr />
+
+                        <div class="row">
+                            <div class="column">
+                                <h4>Distancia Total:</h4>
+                                <p class="button-primary">{decode(data.distancia)}</p>
+                            </div>
+                            <div class="column">
+                                <h4>Medio Sugerido:</h4>
+                                <p class="button-primary">{decode(data.transporte)}</p>
+                            </div>
+                            <div class="column">
+                                <h4>Tiempo Estimado:</h4>
+                                <p class="button-primary">{decode(data.duracion)}</p>
+                            </div>
+                        </div>
+
+                        <hr />
+
+                       
+                    </>
+                )}
+                
+                <p style="margin-top: 30px;">
+                    <a href="/">← Volver al Formulario</a>
+                </p>
+            </div>
+        </section>
+    </main>
+</BaseLayout>

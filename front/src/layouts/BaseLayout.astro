@@ -1,0 +1,50 @@
+---
+// front/src/layouts/BaseLayout.astro
+import 'milligram/dist/milligram.min.css';
+import { ViewTransitions } from 'astro:transitions';
+
+interface Props {
+	title: string;
+	description?: string;
+    image?: string;
+}
+
+const { title, description = 'Calculadora de rutas ultrarrápida con PHP API Headless y Astro.', image } = Astro.props;
+---
+<!doctype html>
+<html lang="es">
+	<head>
+        <meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>{title}</title>
+        <meta name="description" content={description} />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        
+ 
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={description} />
+        {image && <meta property="og:image" content={image} />} 
+        <meta property="og:url" content={Astro.url} />
+        <meta property="og:type" content="website" />
+        
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={title} />
+        <meta name="twitter:description" content={description} />
+        {image && <meta name="twitter:image" content={image} />}
+        
+        <ViewTransitions /> 
+        
+        <style>
+            /* Pequeños ajustes para la UI */
+            .container {
+                max-width: 960px;
+                margin-top: 50px;
+            }
+        </style>
+	</head>
+	<body>
+        <div class="container">
+		    <slot />
+        </div>
+	</body>
+</html>

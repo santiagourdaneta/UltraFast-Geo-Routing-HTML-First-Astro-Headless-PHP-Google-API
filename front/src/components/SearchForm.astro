@@ -1,0 +1,50 @@
+---
+// front/src/components/SearchForm.astro
+// Este componente solo necesita el HTML/JSX y el script del cliente.
+---
+<section class="row">
+    <div class="column column-80 column-offset-10">
+        <h1>✨ Calculadora de Rutas Astro/PHP</h1>
+        <p>Introduce tu punto de partida y destino.</p>
+    </div>
+</section>
+
+<form id="search-form">
+    <fieldset>
+        <label for="puntoA">Punto de Partida (A)</label>
+        <input type="text" id="puntoA" name="puntoA" placeholder="Ej: Torre Eiffel, París" required minlength="3" maxlength="100">
+        
+        <label for="puntoB">Punto de Destino (B)</label>
+        <input type="text" id="puntoB" name="puntoB" placeholder="Ej: Big Ben, Londres" required minlength="3" maxlength="100">
+
+        <input class="button-primary" type="submit" value="Calcular Ruta">
+    </fieldset>
+</form>
+
+<script>
+    const form = document.getElementById('search-form');
+    
+    if (form) {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const puntoA = document.getElementById('puntoA').value;
+            const puntoB = document.getElementById('puntoB').value;
+            
+            if (puntoA.length < 3 || puntoB.length < 3) {
+                 alert('Error: Ambos campos deben tener al menos 3 caracteres.');
+                 return;
+            }
+
+            // 1. Sanitizar y codificar los inputs para crear un SLUG seguro en la URL
+            const slugify = (text: string) => 
+                text.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+
+            const slugA = slugify(puntoA);
+            const slugB = slugify(puntoB);
+
+            // 2. Redirigir usando el historial, lo que Astro intercepta para hacer la transición
+            window.location.href = `/ruta/${slugA}-a-${slugB}`;
+        });
+    }
+</script>
